@@ -1,21 +1,9 @@
 [
     {
-        "room": "2",
-        "name": "1",
-        "job": "2",
-        "phone": "2"
-    },
-    {
         "room": "22",
         "name": "2",
         "job": "2",
         "phone": "2"
-    },
-    {
-        "room": "101",
-        "name": "Hấdas",
-        "job": "Hsadas",
-        "phone": "1031-3123"
     },
     {
         "room": "123123",
@@ -30,22 +18,10 @@
         "phone": "3"
     },
     {
-        "room": "2",
-        "name": "2",
-        "job": "2",
-        "phone": "2"
-    },
-    {
         "room": "3",
         "name": "3",
         "job": "3",
         "phone": "3"
-    },
-    {
-        "room": "5",
-        "name": "5",
-        "job": "5",
-        "phone": "5"
     },
     {
         "room": "6",
@@ -58,5 +34,17 @@
         "name": "13",
         "job": "13",
         "phone": "13"
+    },
+    {
+        "room": "101_ĐL",
+        "name": "Nam",
+        "job": "Học Sinh",
+        "phone": "0343061414"
+    },
+    {
+        "room": "102_ĐL",
+        "name": "Tuấn ",
+        "job": "Đi làm",
+        "phone": "0304033012"
     }
 ]
