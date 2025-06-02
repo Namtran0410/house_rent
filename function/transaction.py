@@ -45,11 +45,11 @@ class Transaction:
             "Tổng tiền": 100,
             "Trạng thái": 80
         }
-        columns = ("Thời gian", "Số Phòng", "Số người", "Số điện", "Số nước", "Tiền dịch vụ", "Tổng tiền", "Trạng thái")
-        self.tree = ttk.Treeview(self.window, columns=columns, show="headings", height=15)
+        self.columns = ("Thời gian", "Số Phòng", "Số người", "Số điện", "Số nước", "Tiền dịch vụ", "Tổng tiền", "Trạng thái")
+        self.tree = ttk.Treeview(self.window, columns=self.columns, show="headings", height=15)
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
 
-        for col in columns:
+        for col in self.columns:
             self.tree.heading(col, text=col)
             self.tree.column(col, anchor="center", width= col_widths[col])
 
@@ -59,7 +59,7 @@ class Transaction:
         # Tạo cửa sổ giao dịch 
         add_transaction_window = tk.Toplevel(self.window)
         add_transaction_window.title("Thêm giao dịch")
-        add_transaction_window.geometry("300x200")
+        add_transaction_window.geometry("300x350")
         add_transaction_window.grab_set()
         self.setup_button_style(add_transaction_window)
         
@@ -97,7 +97,7 @@ class Transaction:
         self.room_counts = dict(self.room_counts)
 
         # Tạo entry khác
-        labels = ["Số người","Số điện", "Số nước", "Tiền dịch vụ", "Tổng tiền", "Trạng thái"]
+        labels = ["Số người","Số điện", "Số nước", "Tiền dịch vụ", "Trạng thái"]
         self.entry_vars =[]
 
         for i, text in enumerate(labels):
@@ -109,7 +109,7 @@ class Transaction:
         def add_transaction_action():
             for var in self.entry_vars:
                 if not var.get():
-                    messagebox.showerror("Lỗi", "Vui lòng nhập đầy đủ thông tin")
+                    messagebox.showerror("Lỗi", "Vui lòng nhập đầy đủ thông tin", parent=add_transaction_window)
                     return
 
             new_data = {
@@ -119,8 +119,7 @@ class Transaction:
                 "number_electric": self.entry_vars[1].get(),
                 "number_water": self.entry_vars[2].get(),
                 "service_fee": self.entry_vars[3].get(),
-                "total_fee": self.entry_vars[4].get(),
-                "status": self.entry_vars[5].get()
+                "status": self.entry_vars[4].get()
             }
             file_path = "data/transaction.json"
             if not os.path.exists("data"):
@@ -138,14 +137,14 @@ class Transaction:
             data.append(new_data)
             with open(file_path, "w", encoding= "utf-8") as f:
                 json.dump(data, f, indent=4, ensure_ascii=False)
-
-            self.tree.insert("", "end", values=(new_data["time"], new_data["room"], new_data["number_human"], new_data["number_electric"], new_data["number_water"], new_data["service_fee"], new_data["total_fee"], new_data["status"]))
+            self.total_fee_value = int(new_data["number_electric"])*4000 + int(new_data["number_water"])*8000 + int(new_data["service_fee"])
+            self.tree.insert("", "end", values=(new_data["time"], new_data["room"], new_data["number_human"], new_data["number_electric"], new_data["number_water"], new_data["service_fee"], self.total_fee_value, new_data["status"]))
             messagebox.showinfo("Thông báo", "Thêm giao dịch thành công", parent=add_transaction_window)
             add_transaction_window.destroy()
 
         # Nút xác nhận
         button_frame = ttk.Frame(form_frame)
-        button_frame.grid(row=len(labels), column=0, columnspan=2, pady=15, sticky="ew")
+        button_frame.grid(row=len(self.columns)-1, column=0, columnspan=2, pady=15, sticky="ew")
         tk.Button(button_frame,
           text="➕ Thêm",
           font=("Segoe UI", 11, "bold"),
@@ -160,13 +159,68 @@ class Transaction:
           command=add_transaction_action).pack(fill="x")    
            
     def edit_transaction(self):
-        pass
+        # Lấy selected item 
+        selected_item = self.tree.selection()
+        if not selected_item:
+            messagebox.showerror("Lỗi", "Vui lòng chọn giao dịch để sửa")
+            return
+        
+        # Tạo toplevel edit 
+        edit_transaction_window = tk.Toplevel(self.window)
+        edit_transaction_window.title("Sửa giao dịch")
+        edit_transaction_window.geometry("300x350")
+        edit_transaction_window.grab_set()
+        self.setup_button_style(edit_transaction_window)
+
+        # Tạo các entry
+        form_frame = ttk.Frame(edit_transaction_window, padding=10)
+        form_frame.pack(fill="both", expand=True)
+
+        # lấy data từ treeview
+        selected_data = self.tree.item(selected_item, "values")
+
+        # Tạo entry thời gian
+        self.time_var = tk.StringVar()
+        self.time_var.set(selected_data[0])
+        ttk.Label(form_frame, text="Thời gian", width=15, anchor="w").grid(row=0, column=0, padx=2, pady=5)
+        self.date_entry = DateEntry(form_frame, textvariable=self.time_var, width = 22)
+        self.date_entry.grid(row=0, column=1, padx=2, pady=5)
+
+        # Tạo combobox cho số phòng
+        self.room_var = tk.StringVar()
+        self.room_var.set(selected_data[1])
+        ttk.Label(form_frame, text="Số phòng", width=15, anchor="w").grid(row=1, column=0, padx=2, pady=5)
+        self.room_combobox = ttk.Combobox(form_frame, textvariable=self.room_var, values = self.options_room, width = 22)
+        self.room_combobox.grid(row=1, column=1, padx=2, pady=5)
+        self.room_combobox.current(0)
+        self.room_combobox.bind("<<ComboboxSelected>>", self.update_human_entry)
+
+        # Load data file 
+        data = self.load_data()
+
+        # Lấy số người 
+        self.room_counts = defaultdict(int)
+        for item in data:
+            self.room_counts[item["room"]]  # Đang làm cái này nha 
 
     def delete_transaction(self):
         pass
 
     def load_data(self):
-        pass
+        file_path = "data/transaction.json"
+        if not os.path.exists("data"):
+            os.makedirs("data")
+        if not os.path.exists(file_path):
+            data = []
+        else: 
+            with open(file_path, "r", encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                    if not isinstance(data, list):
+                        data= [data]
+                except json.JSONDecodeError:
+                    data = []
+        return data
 
     def update_human_entry(self, event=None):
         room = self.room_var.get()

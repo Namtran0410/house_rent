@@ -1,0 +1,20 @@
+[
+    {
+        "time": "6/2/25",
+        "room": "101",
+        "number_human": "1",
+        "number_electric": "1",
+        "number_water": "1",
+        "service_fee": "1",
+        "status": "1"
+    },
+    {
+        "time": "6/2/25",
+        "room": "101",
+        "number_human": "1",
+        "number_electric": "1",
+        "number_water": "1",
+        "service_fee": "1",
+        "status": "1"
+    }
+]
