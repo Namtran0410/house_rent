@@ -128,7 +128,8 @@ class MainWindow:
         transaction = Transaction(self.root)
 
     def revenue(self):
-        pass
+        from function.revenue import Revenue
+        revenue = Revenue(self.root)
 
     def setting(self):
         from function.setting import Setting

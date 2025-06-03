@@ -24,7 +24,7 @@
 - Title: Doanh thu hàng tháng 
 - Treeview thể hiện doanh thu theo thời gian, số phòng, số người, chi phí, lợi nhuận
 
-# Tab 4: Cài đặt
+# Tab 5: Cài đặt
 - topLevel 4
 - Title: Cài đặt 
 - Các entry để nhập thông số: 
@@ -35,7 +35,7 @@
     - Giá nước kinh doanh
     - Giá dịch vụ kinh doanh
     - Nút lưu thông tin - lưu file dưới dạng json
-# Tab 4: Thông tin
+# Tab 6: Thông tin
 - topLevel 5
 - Title: Doanh thu hàng tháng 
 - Các label thể hiện thông tin liên lạc, hướng dẫn sử dụng
