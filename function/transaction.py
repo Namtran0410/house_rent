@@ -183,7 +183,7 @@ class Transaction:
         # Tạo toplevel edit 
         edit_transaction_window = tk.Toplevel(self.window)
         edit_transaction_window.title("Sửa giao dịch")
-        edit_transaction_window.geometry("300x350")
+        edit_transaction_window.geometry("350x350")
         edit_transaction_window.grab_set()
         self.setup_button_style(edit_transaction_window)
 
@@ -331,8 +331,8 @@ class Transaction:
             "number_human": selected_item[2],
             "number_electric": selected_item[3],
             "number_water": selected_item[4],
-            "service_fee": change_to_float(selected_item[5]),
-            "total_fee": change_to_float(selected_item[6]),  # Treeview trả về chuỗi
+            "service_fee": change_to_string(selected_item[5]),
+            "total_fee": change_to_string(selected_item[6]),  # Treeview trả về chuỗi
             "status": selected_item[7]
         }
         data = self.load_data()

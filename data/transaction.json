@@ -50,13 +50,13 @@
         "status": "Chưa thanh toán"
     },
     {
-        "time": "6/2/25",
+        "time": "6/3/25",
         "room": "102_ĐL",
         "number_human": "1",
         "number_electric": "3",
         "number_water": "3",
         "service_fee": "250000",
         "total_fee": "268000",
-        "status": "Chưa thanh toán"
+        "status": "Đã thanh toán"
     }
 ]
