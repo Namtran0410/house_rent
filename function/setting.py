@@ -10,7 +10,7 @@ class Setting:
     def __init__(self, master):
         self.window = tk.Toplevel(master)
         self.window.title("🔧 Cài đặt")
-        self.window.geometry("800x500")
+        self.window.geometry("720x300")
         self.build_ui()
         self.update_setting()
 

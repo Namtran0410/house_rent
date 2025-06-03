@@ -117,12 +117,12 @@ class Transaction:
         self.room_counts = dict(self.room_counts)
 
         # Tạo entry khác
-        labels = ["Số người","Số điện", "Số nước", "Tiền dịch vụ", "Trạng thái"]
+        labels = ["Số người","Số điện", "Số nước", "Trạng thái"]
         self.entry_vars =[]
 
         for i, text in enumerate(labels):
             var = tk.StringVar()
-            if i != 4:
+            if i != 3:
                 ttk.Label(form_frame, text=text, width=15, anchor="w").grid(row=i+2, column=0, padx=2, pady=5)
                 ttk.Entry(form_frame, textvariable=var, width=25).grid(row=i+2, column=1, padx=2, pady=5)
             else: 
@@ -142,9 +142,9 @@ class Transaction:
                 "number_human": self.entry_vars[0].get(),
                 "number_electric": self.entry_vars[1].get(),
                 "number_water": self.entry_vars[2].get(),
-                "service_fee": self.entry_vars[3].get(),
-                "total_fee": self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.entry_vars[3].get()),
-                "status": self.entry_vars[4].get()
+                "service_fee": str(self.service_price),
+                "total_fee": str(self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.service_price)),
+                "status": self.entry_vars[3].get()
             }
 
             self.save_transaction(new_data)
@@ -214,13 +214,13 @@ class Transaction:
         self.room_counts = dict(self.room_counts)
 
         # tạo entry khác
-        labels = ["Số người","Số điện", "Số nước", "Tiền dịch vụ", "Trạng thái"]
+        labels = ["Số người","Số điện", "Số nước", "Trạng thái"]
         self.entry_vars = []
 
         for i, text in enumerate(labels):
             var = tk.StringVar()
             
-            if i != 4:
+            if i != 3:
                 var.set(selected_data[i+2])
                 ttk.Label(form_frame, text=text, width=15, anchor="w").grid(row=i+2, column=0, padx=2, pady=5)
                 ttk.Entry(form_frame, textvariable=var, width=25).grid(row=i+2, column=1, padx=2, pady=5)
@@ -241,9 +241,9 @@ class Transaction:
                 "number_human": self.entry_vars[0].get(),
                 "number_electric": self.entry_vars[1].get(),
                 "number_water": self.entry_vars[2].get(),
-                "service_fee": self.entry_vars[3].get(),
-                "total_fee": self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.entry_vars[3].get()),
-                "status": self.entry_vars[4].get()
+                "service_fee": str(self.service_price),
+                "total_fee": str(self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.service_price)),
+                "status": self.entry_vars[3].get()
             }
 
             self.update_transaction(selected_data, new_data)
@@ -286,7 +286,7 @@ class Transaction:
 
     def update_human_entry(self, event=None):
         room = self.room_var.get()
-        count = self.room_counts.get(room, 0)
+        count = self.get_number_human()
         self.entry_vars[0].set(str(count))
 
     def save_transaction(self, new_data):
@@ -326,8 +326,8 @@ class Transaction:
             "number_human": selected_item[2],
             "number_electric": selected_item[3],
             "number_water": selected_item[4],
-            "service_fee": selected_item[5],
-            "total_fee": int(selected_item[6]),  # Treeview trả về chuỗi
+            "service_fee": str(selected_item[5]),
+            "total_fee": str(selected_item[6]),  # Treeview trả về chuỗi
             "status": selected_item[7]
         }
         data = self.load_data()
@@ -358,8 +358,8 @@ class Transaction:
             "number_human": selected_data[2],
             "number_electric": selected_data[3],
             "number_water": selected_data[4],
-            "service_fee": selected_data[5],
-            "total_fee": int(selected_data[6]),
+            "service_fee": str(selected_data[5]),
+            "total_fee": str(selected_data[6]),
             "status": selected_data[7]
         }
 
@@ -371,8 +371,26 @@ class Transaction:
                 with open(file_path, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=4, ensure_ascii=False)
                 self.tree.delete(selected_item)
-                messagebox.showinfo("Thành công", "Xóa giao dịch thành công", parent=self.window)
                 return
         messagebox.showerror("Lỗi", "Không tìm thấy giao dịch trong dữ liệu", parent=self.window)
 
-#TODO: CẦn thêm chức năng tự động chia dấu phẩy cho dễ nhìn ở giá tiền, SỬA SERVICE FEE NHÉ
+    def get_number_human(self):
+        file_path = "data/list.json"
+        if not os.path.exists("data"):
+            os.makedirs("data")
+        if not os.path.exists(file_path):
+            data = []
+        with open(file_path, "r", encoding="utf-8") as f:
+            data= json.load(f)
+        dict_human = {}
+        for item in data:
+            if item["room"] not in dict_human:
+                dict_human[item["room"]] = 1
+            else: 
+                dict_human[item["room"]] += 1
+        for key, value in dict_human.items():
+            if key == self.room_var.get():
+                return value
+        return 0
+    
+#TODO: CẦn thêm chức năng tự động chia dấu phẩy cho dễ nhìn ở giá tiền
