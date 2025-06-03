@@ -6,7 +6,7 @@ class MainWindow:
     def __init__(self, root):
         self.root = root
         self.root.title("House rental management system")
-        self.root.geometry("720x480")
+        self.root.geometry("1080x720")
         self.root.configure(bg="#f5f5f5")
         self.create_widgets()
 
@@ -43,7 +43,7 @@ class MainWindow:
 
         # Tab 2: Danh sách phòng, số người 
         list_button = tk.Button(tab_bar,
-            text="Danh sách phòng & người",
+            text="Danh sách",
             font=("Segoe UI", 11, "bold"),
             bg="#F0F8FF", 
             bd=0,           # ❗ bỏ viền
@@ -85,6 +85,37 @@ class MainWindow:
             command=self.revenue
         )
         revenue_button.pack(anchor="nw", pady=10, padx=5)
+
+        # Tab 5: Cài đặt
+        setting_button = tk.Button(tab_bar,
+            text="Cài đặt",
+            font=("Segoe UI", 11, "bold"),
+            bg="#F0F8FF", 
+            bd=0,           # ❗ bỏ viền
+            relief="flat",  # ❗ không gờ nổi
+            fg="#0d47a1",
+            activebackground="#d0e8ff",
+            activeforeground="black",
+            cursor="hand2",
+            command=self.setting
+        )
+        setting_button.pack(anchor="nw", pady=10, padx=5)
+
+        # Tab 6: Liên hệ
+        contact_button = tk.Button(tab_bar,
+            text="Thông tin",
+            font=("Segoe UI", 11, "bold"),
+            bg="#F0F8FF", 
+            bd=0,           # ❗ bỏ viền
+            relief="flat",  # ❗ không gờ nổi
+            fg="#0d47a1",
+            activebackground="#d0e8ff",
+            activeforeground="black",
+            cursor="hand2",
+            command=self.contact
+        )
+        contact_button.pack(anchor="sw", pady=10, padx=5)
+
     def overview(self):
         pass
 
@@ -99,6 +130,12 @@ class MainWindow:
     def revenue(self):
         pass
 
+    def setting(self):
+        from function.setting import Setting
+        setting = Setting(self.root)
+
+    def contact(self):
+        pass
 if __name__ == "__main__":
     root = tk.Tk()
     app = MainWindow(root)

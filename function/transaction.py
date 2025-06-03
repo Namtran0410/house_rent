@@ -11,9 +11,24 @@ class Transaction:
         self.window = tk.Toplevel(master)
         self.window.title("💳 Giao dịch")
         self.window.geometry("800x500")
-        self.electric_price = 4000
-        self.water_price = 32000
         self.build_ui()
+
+        if not os.path.exists("data"):
+            os.makedirs("data")
+        file_path = "data/setting.json"
+        if not os.path.exists(file_path):
+            with open(file_path, "w") as f:
+                data = []
+        with open(file_path, "r", encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+                if not isinstance(data, list):
+                    data = [data]
+            except json.JSONDecodeError:
+                data = []
+        self.electric_price = int(data[0]["electric_business_price"])
+        self.water_price = int(data[0]["water_business_price"])
+        self.service_price = int(data[0]["service_price"])
 
     def setup_button_style(self, window):
         style = ttk.Style(window)
@@ -360,4 +375,4 @@ class Transaction:
                 return
         messagebox.showerror("Lỗi", "Không tìm thấy giao dịch trong dữ liệu", parent=self.window)
 
-#TODO: CẦn thêm chức năng tự động chia dấu phẩy cho dễ nhìn ở giá tiền
+#TODO: CẦn thêm chức năng tự động chia dấu phẩy cho dễ nhìn ở giá tiền, SỬA SERVICE FEE NHÉ

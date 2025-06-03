@@ -1,0 +1,10 @@
+[
+    {
+        "invest_value": "21",
+        "electric_base_price": "2000",
+        "electric_business_price": "3000",
+        "water_base_price": "2000",
+        "water_business_price": "3000",
+        "service_price": "250000"
+    }
+]
