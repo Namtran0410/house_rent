@@ -23,6 +23,14 @@
 - topLevel 3
 - Title: Doanh thu hàng tháng 
 - Treeview thể hiện doanh thu theo thời gian, số phòng, số người, chi phí, lợi nhuận
+|Tháng|-----|Chi phí ban đầu|-----|Chi phí thêm|-----|Doanh thu|-----|Lợi nhuận|-----|Tăng giảm|
+
+- Tháng: Lấy tháng gần nhất có data
+- Chi phí ban đầu = Tổng số điện * giá điện + Tổng số nước* giá nước + chi phí dịch vụ ban đầu
+- Chi phí thêm = Sửa chữa, thay, mua mới, nếu có
+- Doanh thu = số tiền thu được qua giao dịch - theo tháng và đã thanh toán
+- Lợi nhuận = Doanh thu - chi phí 
+- Tăng giảm so với tháng trước
 
 # Tab 5: Cài đặt
 - topLevel 4
@@ -33,8 +41,10 @@
     - Giá điện kinh doanh
     - Giá nước gốc
     - Giá nước kinh doanh
-    - Giá dịch vụ kinh doanh
+    - Giá dịch vụ ban đầu -> Phải tính theo người 
+    - Giá dịch vụ kinh doanh -> Phải tính theo người
     - Nút lưu thông tin - lưu file dưới dạng json
+    
 # Tab 6: Thông tin
 - topLevel 5
 - Title: Doanh thu hàng tháng 
