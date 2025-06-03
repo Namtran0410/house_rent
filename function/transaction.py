@@ -3,9 +3,10 @@ from tkinter import ttk, messagebox
 import json
 import os
 import datetime
+from datetime import datetime
 from tkcalendar import DateEntry
 from collections import defaultdict
-
+from .common import change_number_to_thousand, change_to_float, change_to_string
 class Transaction:
     def __init__(self, master):
         self.window = tk.Toplevel(master)
@@ -64,10 +65,14 @@ class Transaction:
         self.columns = ("Thời gian", "Số Phòng", "Số người", "Số điện", "Số nước", "Tiền dịch vụ", "Tổng tiền", "Trạng thái")
         self.tree = ttk.Treeview(self.window, columns=self.columns, show="headings", height=15)
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
+        
 
         for col in self.columns:
-            self.tree.heading(col, text=col)
-            self.tree.column(col, anchor="center", width= col_widths[col])
+            if col == "Thời gian":
+                self.tree.heading(col, text=col, command=lambda c=col: self.sort_tree_by_date(c, False))
+            else:
+                self.tree.heading(col, text=col)
+            self.tree.column(col, anchor="center", width=col_widths[col])
 
         new_data_list = self.load_data()
         for new_data in new_data_list:  # nếu không rỗng # lấy phần tử cuối cùng
@@ -77,11 +82,12 @@ class Transaction:
                 new_data["number_human"],
                 new_data["number_electric"],
                 new_data["number_water"],
-                new_data["service_fee"],
-                new_data["total_fee"],
+                change_number_to_thousand(new_data["service_fee"]),
+                change_number_to_thousand(new_data["total_fee"]),
                 new_data["status"]
             ))
-       
+        self.sort_tree_by_date("Thời gian", reverse=False)
+
 
     def add_transaction(self):
         # Tạo cửa sổ giao dịch 
@@ -107,7 +113,6 @@ class Transaction:
         ttk.Label(form_frame, text="Số phòng", width=15, anchor="w").grid(row=1, column=0, padx=2, pady=5)
         self.room_combobox = ttk.Combobox(form_frame, textvariable=self.room_var, values = self.get_room_data(), width = 22)
         self.room_combobox.grid(row=1, column=1, padx=2, pady=5)
-        self.room_combobox.current(0)
         self.room_combobox.bind("<<ComboboxSelected>>", self.update_human_entry)
 
         # room count
@@ -148,7 +153,7 @@ class Transaction:
             }
 
             self.save_transaction(new_data)
-            self.tree.insert("", "end", values=(new_data["time"], new_data["room"], new_data["number_human"], new_data["number_electric"], new_data["number_water"], new_data["service_fee"], new_data["total_fee"], new_data["status"]))
+            self.tree.insert("", "end", values=(new_data["time"], new_data["room"], new_data["number_human"], new_data["number_electric"], new_data["number_water"], change_number_to_thousand(new_data["service_fee"]), change_number_to_thousand(new_data["total_fee"]), new_data["status"]))
             messagebox.showinfo("Thông báo", "Thêm giao dịch thành công", parent=add_transaction_window)
             add_transaction_window.destroy()
 
@@ -247,7 +252,7 @@ class Transaction:
             }
 
             self.update_transaction(selected_data, new_data)
-            self.tree.item(selected_item, values=(new_data["time"], new_data["room"], new_data["number_human"], new_data["number_electric"], new_data["number_water"], new_data["service_fee"], new_data["total_fee"], new_data["status"]))
+            self.tree.item(selected_item, values=(new_data["time"], new_data["room"], new_data["number_human"], new_data["number_electric"], new_data["number_water"], change_number_to_thousand(new_data["service_fee"]), change_number_to_thousand(new_data["total_fee"]), new_data["status"]))
             messagebox.showinfo("Thông báo", "Sửa giao dịch thành công", parent=edit_transaction_window)
             edit_transaction_window.destroy()
 
@@ -326,8 +331,8 @@ class Transaction:
             "number_human": selected_item[2],
             "number_electric": selected_item[3],
             "number_water": selected_item[4],
-            "service_fee": str(selected_item[5]),
-            "total_fee": str(selected_item[6]),  # Treeview trả về chuỗi
+            "service_fee": change_to_float(selected_item[5]),
+            "total_fee": change_to_float(selected_item[6]),  # Treeview trả về chuỗi
             "status": selected_item[7]
         }
         data = self.load_data()
@@ -358,8 +363,8 @@ class Transaction:
             "number_human": selected_data[2],
             "number_electric": selected_data[3],
             "number_water": selected_data[4],
-            "service_fee": str(selected_data[5]),
-            "total_fee": str(selected_data[6]),
+            "service_fee": change_to_string(selected_data[5]),
+            "total_fee": change_to_string(selected_data[6]),
             "status": selected_data[7]
         }
 
@@ -392,5 +397,26 @@ class Transaction:
             if key == self.room_var.get():
                 return value
         return 0
-    
+
+    def sort_tree_by_date(self, col, reverse):
+        # Lấy dữ liệu từ tree
+        items = [(self.tree.set(k, col), k) for k in self.tree.get_children('')]
+
+        # Chuyển chuỗi "6/3/25" thành datetime
+        def parse_date(date_str):
+            try:
+                return datetime.strptime(date_str, "%m/%d/%y")  # nếu định dạng là mm/dd/yy
+            except ValueError:
+                return datetime.min  # fallback nếu lỗi
+
+        # Sort theo ngày
+        items.sort(key=lambda t: parse_date(t[0]), reverse=reverse)
+
+        # Reorder treeview
+        for index, (val, k) in enumerate(items):
+            self.tree.move(k, '', index)
+
+        # Đảo ngược chiều sort khi click lại
+        self.tree.heading(col, command=lambda: self.sort_tree_by_date(col, not reverse))
+
 #TODO: CẦn thêm chức năng tự động chia dấu phẩy cho dễ nhìn ở giá tiền
