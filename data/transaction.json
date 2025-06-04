@@ -1,62 +1,32 @@
 [
     {
-        "time": "6/3/25",
-        "room": "101_ĐL",
-        "number_human": "1",
-        "number_electric": "4",
-        "number_water": "4",
-        "service_fee": "250000",
-        "total_fee": "274000",
-        "status": "Chưa thanh toán"
-    },
-    {
-        "time": "6/3/25",
-        "room": "102_ĐL",
-        "number_human": "1",
-        "number_electric": "4",
-        "number_water": "4",
-        "service_fee": "250000",
-        "total_fee": "274000",
-        "status": "Chưa thanh toán"
-    },
-    {
-        "time": "6/3/25",
+        "time": "6/4/25",
         "room": "201_ĐL",
         "number_human": "2",
         "number_electric": "5",
         "number_water": "5",
-        "service_fee": "250000",
-        "total_fee": "280000",
-        "status": "Chưa thanh toán"
-    },
-    {
-        "time": "6/3/25",
-        "room": "202_ĐL",
-        "number_human": "1",
-        "number_electric": "40",
-        "number_water": "2",
-        "service_fee": "250000",
-        "total_fee": "376000",
+        "service_fee": "500000",
+        "total_fee": "530000",
         "status": "Chưa thanh toán"
     },
     {
         "time": "6/4/25",
         "room": "101_ĐL",
         "number_human": "1",
-        "number_electric": "10",
-        "number_water": "4",
+        "number_electric": "50",
+        "number_water": "5",
         "service_fee": "250000",
-        "total_fee": "292000",
+        "total_fee": "415000",
         "status": "Chưa thanh toán"
     },
     {
-        "time": "6/3/25",
+        "time": "6/4/25",
         "room": "102_ĐL",
         "number_human": "1",
-        "number_electric": "3",
-        "number_water": "3",
+        "number_electric": "10",
+        "number_water": "5",
         "service_fee": "250000",
-        "total_fee": "268000",
+        "total_fee": "295000",
         "status": "Chưa thanh toán"
     }
 ]

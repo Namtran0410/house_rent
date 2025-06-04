@@ -41,10 +41,9 @@
     - Giá điện kinh doanh
     - Giá nước gốc
     - Giá nước kinh doanh
-    - Giá dịch vụ ban đầu -> Phải tính theo người 
     - Giá dịch vụ kinh doanh -> Phải tính theo người
     - Nút lưu thông tin - lưu file dưới dạng json
-    
+
 # Tab 6: Thông tin
 - topLevel 5
 - Title: Doanh thu hàng tháng 

@@ -63,7 +63,7 @@ class Transaction:
             "Trạng thái": 80
         }
         self.columns = ("Thời gian", "Số Phòng", "Số người", "Số điện", "Số nước", "Tiền dịch vụ", "Tổng tiền", "Trạng thái")
-        self.tree = ttk.Treeview(self.window, columns=self.columns, show="headings", height=15)
+        self.tree = ttk.Treeview(self.window, columns=self.columns, show="headings", height=15, selectmode="extended")
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
         
 
@@ -147,15 +147,13 @@ class Transaction:
                 "number_human": self.entry_vars[0].get(),
                 "number_electric": self.entry_vars[1].get(),
                 "number_water": self.entry_vars[2].get(),
-                "service_fee": str(self.service_price),
-                "total_fee": str(self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.service_price)),
+                "service_fee": str(self.service_price*int(self.entry_vars[0].get())),
+                "total_fee": str(self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.service_price*int(self.entry_vars[0].get()))),
                 "status": self.entry_vars[3].get()
             }
 
             self.save_transaction(new_data)
             self.tree.insert("", "end", values=(new_data["time"], new_data["room"], new_data["number_human"], new_data["number_electric"], new_data["number_water"], change_number_to_thousand(new_data["service_fee"]), change_number_to_thousand(new_data["total_fee"]), new_data["status"]))
-            messagebox.showinfo("Thông báo", "Thêm giao dịch thành công", parent=add_transaction_window)
-            add_transaction_window.destroy()
 
         # Nút xác nhận
         button_frame = ttk.Frame(form_frame)
@@ -246,8 +244,8 @@ class Transaction:
                 "number_human": self.entry_vars[0].get(),
                 "number_electric": self.entry_vars[1].get(),
                 "number_water": self.entry_vars[2].get(),
-                "service_fee": str(self.service_price),
-                "total_fee": str(self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.service_price)),
+                "service_fee": str(self.service_price*int(self.entry_vars[0].get())),
+                "total_fee": str(self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.service_price*int(self.entry_vars[0].get()))),
                 "status": self.entry_vars[3].get()
             }
 
@@ -351,33 +349,37 @@ class Transaction:
         if not selected_item:
             messagebox.showerror("Lỗi", "Vui lòng chọn giao dịch để xóa", parent=self.window)
             return
-
-        selected_data = self.tree.item(selected_item, "values")
+        selected_data = []
+        
         confirm = messagebox.askyesno("Xác nhận", "Bạn có chắc chắn muốn xóa giao dịch này không?", parent=self.window)
         if not confirm:
             return
-
-        selected_dict = {
-            "time": selected_data[0],
-            "room": selected_data[1],
-            "number_human": selected_data[2],
-            "number_electric": selected_data[3],
-            "number_water": selected_data[4],
-            "service_fee": change_to_string(selected_data[5]),
-            "total_fee": change_to_string(selected_data[6]),
-            "status": selected_data[7]
-        }
-
-        data = self.load_data()
+        for item in selected_item:
+            raw = self.tree.item(item, "values")
+            selected_data.append((
+                raw[0],
+                raw[1],
+                raw[2],
+                raw[3],
+                raw[4],
+                change_to_string(raw[5]),
+                change_to_string(raw[6]),
+                raw[7]
+            ))
+            self.tree.delete(item)
         file_path = "data/transaction.json"
-        for index, item in enumerate(data):
-            if item == selected_dict:
-                del data[index]
-                with open(file_path, "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=4, ensure_ascii=False)
-                self.tree.delete(selected_item)
-                return
-        messagebox.showerror("Lỗi", "Không tìm thấy giao dịch trong dữ liệu", parent=self.window)
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding= "utf-8") as f: 
+                try: 
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    data = []
+        
+        data = [d for d in data if (d["time"], d["room"], d["number_human"], d["number_electric"], 
+                                    d["number_water"], change_to_string(d["service_fee"]), change_to_string(d["total_fee"]),d["status"]) not in selected_data]
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+
 
     def get_number_human(self):
         file_path = "data/list.json"

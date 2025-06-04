@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import json
 import os
+import re
 
 class ListRoomPeople:
     def __init__(self, master):
@@ -9,8 +10,9 @@ class ListRoomPeople:
         self.window.title("🏠 Thống kê phòng và người")
         self.window.geometry("800x500")
 
-        self.setup_button_style(self.window)  # Chỉ gọi 1 lần với main window
+        self.sort_asc = True  # Biến để toggle sắp xếp tăng/giảm
 
+        self.setup_button_style(self.window)
         self.build_ui()
 
     def setup_button_style(self, window):
@@ -36,14 +38,45 @@ class ListRoomPeople:
         ttk.Button(btn_frame, text="🗑️ Xóa", command=self.delete_room).pack(side="left", padx=5)
 
         columns = ("Phòng", "Người ở", "Nghề nghiệp", "số điện thoại")
-        self.tree = ttk.Treeview(self.window, columns=columns, show="headings", height=15)
+        self.tree = ttk.Treeview(self.window, columns=columns, show="headings", height=15, selectmode= "extended")
         self.tree.pack(fill="both", expand=True, padx=10, pady=10)
 
         for col in columns:
             self.tree.heading(col, text=col)
+
+        self.tree.heading("Phòng", text="Phòng", command=self.toggle_sort_by_room)
+
+        for col in columns:
             self.tree.column(col, anchor="center")
 
         self.load_data()
+
+    def extract_room_number(self, room):
+        match = re.match(r"(\d+)", room)
+        return int(match.group(1)) if match else room
+
+    def toggle_sort_by_room(self):
+        self.sort_asc = not self.sort_asc
+        self.load_data()
+
+    def load_data(self):
+        file_path = "data/list.json"
+        if not os.path.exists(file_path):
+            return
+        with open(file_path, "r", encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+                if not isinstance(data, list):
+                    data = [data]
+            except json.JSONDecodeError:
+                data = []
+
+        # Sắp xếp tăng hoặc giảm dựa trên self.sort_asc
+        data.sort(key=lambda x: self.extract_room_number(x["room"]), reverse=not self.sort_asc)
+
+        self.tree.delete(*self.tree.get_children())
+        for item in data:
+            self.tree.insert("", "end", values=(item["room"], item["name"], item["job"], item["phone"]))
 
     def add_room(self):
         add_room_window = tk.Toplevel(self.window)
@@ -52,7 +85,6 @@ class ListRoomPeople:
         add_room_window.grab_set()
 
         self.setup_button_style(add_room_window)
-
         form_frame = ttk.Frame(add_room_window, padding=10)
         form_frame.pack(fill="both", expand=True)
 
@@ -97,7 +129,7 @@ class ListRoomPeople:
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4, ensure_ascii=False)
 
-            self.tree.insert("", "end", values=(new_data["room"], new_data["name"], new_data["job"], new_data["phone"]))
+            self.load_data()
             messagebox.showinfo("Thông báo", "Thêm thành công", parent=self.window)
             add_room_window.destroy()
 
@@ -130,7 +162,6 @@ class ListRoomPeople:
         edit_window.grab_set()
 
         self.setup_button_style(edit_window)
-
         form_frame = ttk.Frame(edit_window, padding=10)
         form_frame.pack(fill="both", expand=True)
 
@@ -167,6 +198,7 @@ class ListRoomPeople:
                 with open(file_path, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=4, ensure_ascii=False)
 
+            self.load_data()
             messagebox.showinfo("Thông báo", "Cập nhật thành công", parent=self.window)
             edit_window.destroy()
 
@@ -184,9 +216,11 @@ class ListRoomPeople:
           pady=5,
           cursor="hand2",
           command=save_edit_action).pack(fill="x")
-        
+
     def delete_room(self):
         selected = self.tree.selection()
+        selected_list = list(selected)
+
         if not selected:
             messagebox.showerror("Lỗi", "Vui lòng chọn dòng cần xóa", parent=self.window)
             return
@@ -194,9 +228,9 @@ class ListRoomPeople:
         confirm = messagebox.askyesno("Xác nhận", "Bạn có chắc muốn xóa dòng đã chọn?", parent=self.window)
         if not confirm:
             return
-
-        current_values = self.tree.item(selected[0], "values")
-        self.tree.delete(selected[0])
+        selected_value = [self.tree.item(item, "values") for item in selected_list]
+        for item in selected_list:
+            self.tree.delete(item)
 
         file_path = "data/list.json"
         if os.path.exists(file_path):
@@ -206,22 +240,7 @@ class ListRoomPeople:
                 except json.JSONDecodeError:
                     data = []
 
-            data = [d for d in data if (d["room"], d["name"], d["job"], d["phone"]) != current_values]
+            data = [d for d in data if (d["room"], d["name"], d["job"], d["phone"]) not in selected_value]
 
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4, ensure_ascii=False)
-
-    def load_data(self):
-        file_path = "data/list.json"
-        if not os.path.exists(file_path):
-            return
-        with open(file_path, "r", encoding="utf-8") as f:
-            try:
-                data = json.load(f)
-                if not isinstance(data, list):
-                    data = [data]
-            except json.JSONDecodeError:
-                data = []
-
-        for item in data:
-            self.tree.insert("", "end", values=(item["room"], item["name"], item["job"], item["phone"]))
