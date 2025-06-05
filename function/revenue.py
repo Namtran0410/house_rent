@@ -52,7 +52,82 @@ class Revenue:
                 self.tree.heading(col, text=col)
             self.tree.column(col, anchor="center", width= col_widths[col])
     
-        self.tree.insert("", "end", values=("06/2025", "1000", "500", "3000", "1500", "+50%"))
+
+    # Load các dữ liệu từ file Json 
+    #1: lấy data từ transaction và lọc theo tháng
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def sort_tree_by_date(self, col, reverse):
         # Lấy dữ liệu từ tree
