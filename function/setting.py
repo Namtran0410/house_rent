@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import json
 import os
+from turtle import width
 from tkcalendar import DateEntry
 from collections import defaultdict
 
@@ -9,7 +10,7 @@ class Setting:
     def __init__(self, master):
         self.window = tk.Toplevel(master)
         self.window.title("🔧 Cài đặt")
-        self.window.geometry("720x300")
+        self.window.geometry("720x360")
         self.build_ui()
         self.update_setting()
 
@@ -63,6 +64,10 @@ class Setting:
         self.service_entry = ttk.Entry(label_frame, textvariable=self.entry_service_vars)
         self.service_entry.grid(column=1, row=3, padx=5, pady=10, sticky="w")
         self.service_entry.bind("<KeyRelease>", lambda e: self.format_thousand(self.entry_service_vars, self.service_entry))
+
+        # Nút thêm giá phòng
+        ttk.Button(label_frame, text="Thêm giá phòng", command = self.add_room).grid(column=0, row=4, padx=5, 
+        columnspan=2, pady=10, sticky="w")
 
         # Nút lưu
         save_button_frame = ttk.Frame(main_frame)
@@ -147,3 +152,53 @@ class Setting:
 
     def clean_number(self, s):
         return s.replace(",", "")
+
+    def add_room(self):
+        self.add_room_window = tk.Toplevel(self.window)
+        self.add_room_window.title("Thêm phòng và giá phòng")
+        self.add_room_window.geometry("480x720")
+        
+        # Thêm nút bấm
+        #Frame tổng 
+        form_frame = ttk.Frame(self.add_room_window, padding=10)
+        form_frame.pack(fill="both", expand=True)
+
+        self.field_count = 0
+        self.entries = []
+
+        def add_room_infor():
+            if self.entries:
+                last_entries = self.entries[-1]
+                room= last_entries[0].get().strip()
+                price = last_entries[1].get().strip()
+                if not room and not price:
+                    return
+
+            self.field_count += 1
+            # Tạo label
+            ttk.Label(form_frame, text="Số phòng")\
+                .grid(row= self.field_count, column=0, padx=5, pady=2, sticky="w") 
+
+            #Tạo entry
+            ttk.Entry(form_frame, width=25)\
+                .grid(row= self.field_count, column=1, padx=5, pady=2)
+
+            #Tạo VNĐ giá tiền đằng sau 
+            ttk.Label(form_frame, text="VNĐ")\
+                .grid(row= self.field_count, column=2, padx=5, pady=2) 
+
+            ttk.Entry(form_frame, width=25)\
+                .grid(row= self.field_count, column=3, padx=5, pady=2)
+
+        ttk.Button(form_frame, text='Thêm thông tin phòng',command= add_room_infor)\
+            .grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 5))
+
+        # Frame chứa nút Lưu dưới cùng
+        save_btn_frame = ttk.Frame(self.add_room_window)
+        save_btn_frame.pack(side="bottom", pady=10)
+
+        # Nút Lưu (tạo 1 lần duy nhất)
+        ttk.Button(save_btn_frame, text="Lưu", command=lambda: print("Lưu dữ liệu"))\
+            .pack(anchor="center")
+
+#TODO: Lưu data và các entry

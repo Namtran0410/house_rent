@@ -35,13 +35,21 @@ class Revenue:
         title.pack(pady=10)
 
         btn_frame = ttk.Frame(self.window)
-        btn_frame.pack(pady=5)
+        btn_frame.pack(fill="x", padx=10, pady=5, anchor="w") 
 
-        ttk.Button(btn_frame, text="➕ Chi phí phát sinh", command=self.add_expensed).pack(side="left", padx=5)
+        # Nút "Chọn năm" với biểu tượng filter
+        ttk.Label(btn_frame, text="🔍 Chọn năm", width=15, anchor="w").pack(side="left")
+        self.choos_year_variable = tk.StringVar()
+        choose_year_button = ttk.Combobox(btn_frame, textvariable= self.choos_year_variable, values= self.get_year())
+        choose_year_button.pack(side="left")
+
+        # Nút "Chi phí phát sinh"
+        ttk.Button(btn_frame, text="➕ Chi phí phát sinh", command=self.add_expensed).pack(side="left", padx=20)
 
         self.columns = ("Tháng", "Chi phí ban đầu", "Chi phí thêm", "Doanh thu", "Lợi nhuận", "Tăng giảm")
         self.tree = ttk.Treeview(self.window, columns = self.columns, show="headings", height=15, selectmode="extended")
         self.tree.pack(fill= "both", expand= True, padx=10, pady=10)
+        choose_year_button.bind("<<ComboboxSelected>>", self.update_treeview_by_year)
 
         col_widths = {
             "Tháng": 100,
@@ -100,17 +108,21 @@ class Revenue:
     # add vào treeview
     def load_data(self):
         # Load các dữ liệu từ file Json 
+        year = self.choos_year_variable.get()
+        if not year:
+            return  # Không có năm được chọn thì thoát luôn
         #1: lấy data từ transaction và lọc theo tháng - tháng và doanh thu
-        revenue_per_months = revenue_per_month("data/transaction.json")  #[{'6': 945000}, {'7': 295000}]
+        revenue_per_months = revenue_per_month("data/transaction.json", year)  #[{'6': 945000}, {'7': 295000}]
 
         #2 lấy chi phí ban đầu : số điện ban đầu, số nước ban đầu
-        usage_per_months = expense_per_month("data/transaction.json", "data/setting.json") # [{'6': 130000}, {'7': 30000}]
+        usage_per_months = expense_per_month("data/transaction.json", "data/setting.json", year) # [{'6': 130000}, {'7': 30000}]
 
         #3: lấy data cho treeview
         revenue_month_format= [{'month': int(k), 'revenue': v} for d in revenue_per_months for k, v in d.items()]
         usage_per_months_format= [{'month': int(k), 'expense': v} for d in usage_per_months for k, v in d.items()]
 
-        #4: merge 2 list    
+        #4: merge 2 list  
+        previous_profit = 0    
         merged_data = []
         for i in range(1, 13):
             month_data = {'month': i}
@@ -129,70 +141,90 @@ class Revenue:
             merged_data.append(month_data)
             month_data['profit'] = month_data['revenue'] - month_data['expense']
 
-            self.tree.insert("", "end", values=(month_data['month'], change_number_to_thousand(month_data['expense'])
-            , "Chi phí thêm", change_number_to_thousand(month_data['revenue']), 
-            change_number_to_thousand((month_data['profit'])), "Tăng giảm"))
+            month_data['profit'] = month_data['revenue'] - month_data['expense']
+            status = self.get_status(month_data['profit'], previous_profit)
+            previous_profit = month_data['profit']
 
-#TODO: Lọc theo năm 
+            self.tree.insert("", "end", values=(
+                month_data['month'],
+                change_number_to_thousand(month_data['expense']),
+                "Chi phí thêm",
+                change_number_to_thousand(month_data['revenue']),
+                change_number_to_thousand(month_data['profit']),
+                status
+            ))
 
+    def get_year(self):
+        list_year = []
+        file_path = "data/transaction.json"
+        if not os.path.exists("data"):
+            os.mkdir("data")
+        if not os.path.exists(file_path):
+            data= []
+        else: 
+            with open(file_path, "r", encoding='utf-8') as f:
+                data = json.load(f)
+                for item in data:
+                    if 'time' in item:
+                        year = item['time'].split("/")[-1]
+                        if year not in list_year:
+                            list_year.append(year)
+        return list_year
 
+    def update_treeview_by_year(self, event= None):
+        year = self.choos_year_variable.get()
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        if year: 
+            revenue_per_months = revenue_per_month("data/transaction.json", year)
+            usage_per_months = expense_per_month("data/transaction.json", "data/setting.json", year)
 
+            revenue_month_format = [{'month': int(k), 'revenue': v} for d in revenue_per_months for k, v in d.items()]
+            usage_per_months_format = [{'month': int(k), 'expense': v} for d in usage_per_months for k, v in d.items()]
 
+            #4: merge 2 list    
+            merged_data = []
+            previous_profit = 0
+            for i in range(1, 13):
+                month_data = {'month': i}
+                for data in revenue_month_format:
+                    if data['month'] == i:
+                        month_data['revenue'] = data['revenue']
+                        break
+                    else:
+                        month_data['revenue'] = 0 
+                for data in usage_per_months_format:
+                    if data['month'] == i:
+                        month_data['expense'] = data['expense']
+                        break
+                    else: 
+                        month_data['expense'] = 0 
+                merged_data.append(month_data)
+                month_data['profit'] = month_data['revenue'] - month_data['expense']
 
+                month_data['profit'] = month_data['revenue'] - month_data['expense']
+                status = self.get_status(month_data['profit'], previous_profit)
+                previous_profit = month_data['profit']
 
+                self.tree.insert("", "end", values=(
+                    month_data['month'],
+                    change_number_to_thousand(month_data['expense']),
+                    "Chi phí thêm",
+                    change_number_to_thousand(month_data['revenue']),
+                    change_number_to_thousand(month_data['profit']),
+                    status
+                ))
+        else:
+            return 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def get_status(self, current_profit, previous_profit):
+        delta = current_profit - previous_profit
+        if delta > 0:
+            return "🔺 Tăng"
+        elif delta < 0:
+            return "🔻 Giảm"
+        else :
+            return "⚪ Không đổi"
 
 
     def sort_tree_by_date(self, col, reverse):
