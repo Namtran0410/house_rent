@@ -1,1 +1,6 @@
-Combobox list phòng = setting room
+1.Combobox list phòng = setting room
+2.Chi phí thêm ở doanh thu 
+3.tính lợi nhuận dưa trên cả tiền phòng 
+4. setting - xóa phòng
+    |nhập phòng|---------|Entry|---------|Button|
+    -----------Xóa-----------Reload-----------Save-----------
