@@ -118,5 +118,25 @@
         "service_fee": "250000",
         "total_fee": "307000",
         "status": "Chưa thanh toán"
+    },
+    {
+        "time": "6/11/25",
+        "room": "201_ĐL",
+        "number_human": "2",
+        "number_electric": "10",
+        "number_water": "5",
+        "service_fee": "500000",
+        "total_fee": "545000",
+        "status": "Đã thanh toán"
+    },
+    {
+        "time": "6/11/25",
+        "room": "202_ĐL",
+        "number_human": "2",
+        "number_electric": "12",
+        "number_water": "5",
+        "service_fee": "500000",
+        "total_fee": "551000",
+        "status": "Đã thanh toán"
     }
 ]
