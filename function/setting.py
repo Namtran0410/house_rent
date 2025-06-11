@@ -157,16 +157,29 @@ class Setting:
         self.add_room_window = tk.Toplevel(self.window)
         self.add_room_window.title("Thêm phòng và giá phòng")
         self.add_room_window.geometry("480x720")
-        
+        self.form_frame = ttk.Frame(self.add_room_window, padding=10)
+        self.form_frame.pack(fill="both", expand=True)
+
+        file_path= "data/room_info.json"
+        if not os.path.exists(file_path):
+            with open(file_path, "w", encoding='utf-8') as f:
+                json.dump([],f)
+
+        with open(file_path, "r", encoding= 'utf-8') as f:
+            try:
+                data = json.load(f)
+                if not isinstance(data, list):
+                    data = []
+            except json.JSONDecodeError:
+                data = []
+
         # Thêm nút bấm
-        #Frame tổng 
-        form_frame = ttk.Frame(self.add_room_window, padding=10)
-        form_frame.pack(fill="both", expand=True)
-
-        self.field_count = 0
+        self.field_count = len(data)
         self.entries = []
-
+        self.load_room_info()
         def add_room_infor():
+            self.room_var = tk.StringVar()
+            self.price_var = tk.StringVar()
             if self.entries:
                 last_entries = self.entries[-1]
                 room= last_entries[0].get().strip()
@@ -176,21 +189,26 @@ class Setting:
 
             self.field_count += 1
             # Tạo label
-            ttk.Label(form_frame, text="Số phòng")\
+            ttk.Label(self.form_frame, text="Số phòng")\
                 .grid(row= self.field_count, column=0, padx=5, pady=2, sticky="w") 
-
-            #Tạo entry
-            ttk.Entry(form_frame, width=25)\
+            
+            #Tạo entry 
+            self.entry_room= ttk.Entry(self.form_frame, width=25, textvariable=self.room_var)\
                 .grid(row= self.field_count, column=1, padx=5, pady=2)
-
+            
             #Tạo VNĐ giá tiền đằng sau 
-            ttk.Label(form_frame, text="VNĐ")\
+            ttk.Label(self.form_frame, text="VNĐ")\
                 .grid(row= self.field_count, column=2, padx=5, pady=2) 
 
-            ttk.Entry(form_frame, width=25)\
-                .grid(row= self.field_count, column=3, padx=5, pady=2)
+            self.entry_price = ttk.Entry(self.form_frame, width=25, textvariable=self.price_var)
+            self.entry_price.grid(row= self.field_count, column=3, padx=5, pady=2)
+            self.entry_price.bind("<KeyRelease>", lambda e: self.format_thousand(self.price_var, self.entry_price))
+            
+            self.entries.append((self.room_var, self.price_var))
+            for entry in self.entries:
+                print(entry[0].get(), entry[1].get())
 
-        ttk.Button(form_frame, text='Thêm thông tin phòng',command= add_room_infor)\
+        ttk.Button(self.form_frame, text='Thêm thông tin phòng',command= add_room_infor)\
             .grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 5))
 
         # Frame chứa nút Lưu dưới cùng
@@ -198,7 +216,72 @@ class Setting:
         save_btn_frame.pack(side="bottom", pady=10)
 
         # Nút Lưu (tạo 1 lần duy nhất)
-        ttk.Button(save_btn_frame, text="Lưu", command=lambda: print("Lưu dữ liệu"))\
+        ttk.Button(save_btn_frame, text="Lưu", command=lambda: self.save_room_info())\
             .pack(anchor="center")
 
-#TODO: Lưu data và các entry
+    def save_room_info(self):
+        file_path= "data/room_info.json"
+        if not os.path.exists(file_path):
+            with open(file_path, "w", encoding='utf-8') as f:
+                json.dump([],f)
+
+        with open(file_path, "r", encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+                if not isinstance(data, list):
+                    data = []
+            except json.JSONDecodeError:
+                data = []
+        new_data = []
+        for entry in self.entries:
+            room_name = entry[0].get().strip()
+            room_price = entry[1].get().strip()
+            if not room_name and not room_price:
+                continue
+            new_data.append({"room_name": room_name, "room_price": room_price})
+        # Ghi đè dữ liệu mới
+        with open(file_path, "w", encoding='utf-8') as f:
+            json.dump(new_data, f, indent=4, ensure_ascii=False)
+            
+    def load_room_info(self):
+        file_path = "data/room_info.json"
+        # 1. Xoá dữ liệu giao diện cũ
+        for widget in self.form_frame.winfo_children():
+            widget.destroy()
+        self.entries = []
+        self.field_count = 0
+
+        # 2. Tạo file nếu chưa có
+        if not os.path.exists(file_path):
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, "w", encoding='utf-8') as f:
+                json.dump([], f)
+
+        # 3. Đọc dữ liệu
+        with open(file_path, "r", encoding='utf-8') as f:
+            try:
+                load_data = json.load(f)
+                if not isinstance(load_data, list):
+                    load_data = []
+            except json.JSONDecodeError:
+                load_data = []
+        
+        # 4. Tạo lại các dòng entry
+        for item in load_data:
+            room_var = tk.StringVar()
+            price_var = tk.StringVar()
+            room_var.set(item.get("room_name", ""))
+            price_var.set(item.get("room_price", ""))
+
+            self.field_count += 1
+
+            ttk.Label(self.form_frame, text="Số phòng")\
+                .grid(row=self.field_count, column=0, padx=5, pady=2, sticky="w")
+            self.entry_room= ttk.Entry(self.form_frame, width=25, textvariable=room_var)\
+                .grid(row=self.field_count, column=1, padx=5, pady=2)
+            ttk.Label(self.form_frame, text="VNĐ")\
+                .grid(row=self.field_count, column=2, padx=5, pady=2)
+            self.entry_price= ttk.Entry(self.form_frame, width=25, textvariable=price_var)\
+                .grid(row=self.field_count, column=3, padx=5, pady=2)
+
+            self.entries.append((room_var, price_var))
