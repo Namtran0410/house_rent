@@ -58,12 +58,16 @@ class Setting:
             self.entry_water_vars.append(var)
 
         # Giá dịch vụ kinh doanh
-        self.entry_service_vars = tk.StringVar()
-        ttk.Label(label_frame, text="Giá dịch vụ kinh doanh", font=("Helvetica", 10, "bold")) \
-            .grid(column=0, row=3, padx=5, pady=10, sticky="w")
-        self.service_entry = ttk.Entry(label_frame, textvariable=self.entry_service_vars)
-        self.service_entry.grid(column=1, row=3, padx=5, pady=10, sticky="w")
-        self.service_entry.bind("<KeyRelease>", lambda e: self.format_thousand(self.entry_service_vars, self.service_entry))
+        labels = ["Giá dịch vụ gốc", "Giá dịch vụ kinh doanh"]
+        self.entry_service_vars = []
+        for i, label in enumerate(labels):
+            var = tk.StringVar()
+            ttk.Label(label_frame, text=label, font=("Helvetica", 10, "bold")) \
+                .grid(column=i * 2, row=3, padx=5, pady=10, sticky="w")
+            entry = ttk.Entry(label_frame, textvariable=var)
+            entry.grid(column=i * 2 + 1, row=3, padx=5, pady=10, sticky="w")
+            entry.bind("<KeyRelease>", lambda e, v=var, w=entry: self.format_thousand(v, w))
+            self.entry_service_vars.append(var)
 
         # Nút thêm giá phòng
         ttk.Button(label_frame, text="Thêm giá phòng", command = self.add_room).grid(column=0, row=4, padx=5, 
@@ -80,7 +84,7 @@ class Setting:
         invest_value = self.clean_number(self.invest_value.get())
         electric_price = [self.clean_number(var.get()) for var in self.entry_electric_vars]
         water_price = [self.clean_number(var.get()) for var in self.entry_water_vars]
-        service_price = self.clean_number(self.entry_service_vars.get())
+        service_price = [self.clean_number(var.get()) for var in self.entry_service_vars]
 
         # Kiểm tra
         if not invest_value or not all(electric_price) or not all(water_price) or not service_price:
@@ -93,7 +97,8 @@ class Setting:
             "electric_business_price": electric_price[1],
             "water_base_price": water_price[0],
             "water_business_price": water_price[1],
-            "service_price": service_price
+            "service_base_price": service_price[0],
+            "service_business_price": service_price[1]
         }
 
         file_path = "data/setting.json"
@@ -141,7 +146,8 @@ class Setting:
             self.entry_electric_vars[1].set(f"{int(d['electric_business_price']):,}")
             self.entry_water_vars[0].set(f"{int(d['water_base_price']):,}")
             self.entry_water_vars[1].set(f"{int(d['water_business_price']):,}")
-            self.entry_service_vars.set(f"{int(d['service_price']):,}")
+            self.entry_service_vars[0].set(f"{int(d['service_base_price']):,}")
+            self.entry_service_vars[1].set(f"{int(d['service_business_price']):,}")
 
     def format_thousand(self, var, entry_widget):
         value = var.get().replace(",", "")
@@ -242,7 +248,7 @@ class Setting:
         # Ghi đè dữ liệu mới
         with open(file_path, "w", encoding='utf-8') as f:
             json.dump(new_data, f, indent=4, ensure_ascii=False)
-            
+
     def load_room_info(self):
         file_path = "data/room_info.json"
         # 1. Xoá dữ liệu giao diện cũ
@@ -285,3 +291,5 @@ class Setting:
                 .grid(row=self.field_count, column=3, padx=5, pady=2)
 
             self.entries.append((room_var, price_var))
+
+    

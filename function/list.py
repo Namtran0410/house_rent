@@ -9,10 +9,13 @@ class ListRoomPeople:
         self.window = tk.Toplevel(master)
         self.window.title("🏠 Thống kê phòng và người")
         self.window.geometry("800x500")
-
         self.sort_asc = True  # Biến để toggle sắp xếp tăng/giảm
-
         self.setup_button_style(self.window)
+        self.room_info = []
+        with open("data/room_info.json", "r", encoding="utf-8") as f:
+             data = json.load(f)
+        for item in data:
+            self.room_info.append(item['room_name'])
         self.build_ui()
 
     def setup_button_style(self, window):
@@ -34,6 +37,7 @@ class ListRoomPeople:
         btn_frame.pack(pady=5)
 
         ttk.Button(btn_frame, text="➕ Thêm", command=self.add_room).pack(side="left", padx=5)
+
         ttk.Button(btn_frame, text="✏️ Sửa", command=self.edit_room).pack(side="left", padx=5)
         ttk.Button(btn_frame, text="🗑️ Xóa", command=self.delete_room).pack(side="left", padx=5)
 
@@ -88,13 +92,18 @@ class ListRoomPeople:
         form_frame = ttk.Frame(add_room_window, padding=10)
         form_frame.pack(fill="both", expand=True)
 
-        labels = ["Tên phòng:", "Tên thành viên:", "Nghề nghiệp:", "Số điện thoại:"]
+        labels = ["Tên thành viên:", "Nghề nghiệp:", "Số điện thoại:"]
         entry_vars = []
+        ttk.Label(form_frame, text="Tên phòng", width=15, anchor="w").grid(row=0, column=0, padx=5, pady=5)
+
+        entry_var_room = tk.StringVar()
+        self.add_room_button = ttk.Combobox(form_frame, values=self.room_info, textvariable= entry_var_room, width=22)
+        self.add_room_button.grid(row=0, column=1, padx=2, pady=5)
 
         for i, text in enumerate(labels):
             var = tk.StringVar()
-            ttk.Label(form_frame, text=text, width=15, anchor="w").grid(row=i, column=0, padx=5, pady=5)
-            ttk.Entry(form_frame, width=25, textvariable=var).grid(row=i, column=1, padx=2, pady=5)
+            ttk.Label(form_frame, text=text, width=15, anchor="w").grid(row=i+1, column=0, padx=5, pady=5)
+            ttk.Entry(form_frame, width=25, textvariable=var).grid(row=i+1, column=1, padx=2, pady=5)
             entry_vars.append(var)
 
         def add_room_action():
@@ -104,16 +113,13 @@ class ListRoomPeople:
                     return
 
             new_data = {
-                "room": entry_vars[0].get(),
-                "name": entry_vars[1].get(),
-                "job": entry_vars[2].get(),
-                "phone": entry_vars[3].get()
+                "room": entry_var_room.get(),
+                "name": entry_vars[0].get(),
+                "job": entry_vars[1].get(),
+                "phone": entry_vars[2].get()
             }
 
             file_path = "data/list.json"
-            if not os.path.exists("data"):
-                os.makedirs("data")
-
             if not os.path.exists(file_path):
                 data = []
             else:
@@ -134,7 +140,7 @@ class ListRoomPeople:
             add_room_window.destroy()
 
         button_frame = tk.Frame(form_frame)
-        button_frame.grid(row=len(labels), column=0, columnspan=2, pady=15, sticky="ew")
+        button_frame.grid(row=len(labels)+1, column=0, columnspan=2, pady=15, sticky="ew")
         tk.Button(button_frame,
           text="➕ Thêm",
           font=("Segoe UI", 11, "bold"),
@@ -165,13 +171,18 @@ class ListRoomPeople:
         form_frame = ttk.Frame(edit_window, padding=10)
         form_frame.pack(fill="both", expand=True)
 
-        labels = ["Tên phòng:", "Tên thành viên:", "Nghề nghiệp:", "Số điện thoại:"]
+        labels = ["Tên thành viên:", "Nghề nghiệp:", "Số điện thoại:"]
         entry_vars = []
-
+        ttk.Label(form_frame, text="Tên phòng", width=15, anchor="w").grid(row=0, column=0, padx=5, pady=5)
+        self.edit_room_button = ttk.Combobox(form_frame, values=self.room_info, width=22)
+        self.edit_room_button.grid(row=0, column=1, padx=2, pady=5)
+        self.edit_room_button.set(current_values[0])
+        entry_vars.append(self.edit_room_button)
+        
         for i, text in enumerate(labels):
-            var = tk.StringVar(value=current_values[i])
-            ttk.Label(form_frame, text=text, width=15, anchor="w").grid(row=i, column=0, padx=5, pady=5)
-            ttk.Entry(form_frame, width=25, textvariable=var).grid(row=i, column=1, padx=2, pady=5)
+            var = tk.StringVar(value=current_values[i+1])
+            ttk.Label(form_frame, text=text, width=15, anchor="w").grid(row=i+1, column=0, padx=5, pady=5)
+            ttk.Entry(form_frame, width=25, textvariable=var).grid(row=i+1, column=1, padx=2, pady=5)
             entry_vars.append(var)
 
         def save_edit_action():
@@ -203,7 +214,7 @@ class ListRoomPeople:
             edit_window.destroy()
 
         button_frame = tk.Frame(form_frame)
-        button_frame.grid(row=len(labels), column=0, columnspan=2, pady=15, sticky="ew")
+        button_frame.grid(row=len(labels)+1, column=0, columnspan=2, pady=15, sticky="ew")
         tk.Button(button_frame,
           text="💾 Lưu",
           font=("Segoe UI", 11, "bold"),

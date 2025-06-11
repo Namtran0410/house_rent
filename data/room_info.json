@@ -1,18 +1,1 @@
-[
-    {
-        "room_name": "101",
-        "room_price": "5,000,000"
-    },
-    {
-        "room_name": "102",
-        "room_price": "4,000,000"
-    },
-    {
-        "room_name": "103",
-        "room_price": "4,000,000"
-    },
-    {
-        "room_name": "201",
-        "room_price": "3,000,000"
-    }
-]
+[]

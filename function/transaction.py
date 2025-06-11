@@ -6,7 +6,7 @@ import datetime
 from datetime import datetime
 from tkcalendar import DateEntry
 from collections import defaultdict
-from .common import change_number_to_thousand, change_to_float, change_to_string
+from .common import change_number_to_thousand, change_to_float, change_to_string, change_string_to_float
 class Transaction:
     def __init__(self, master):
         self.window = tk.Toplevel(master)
@@ -140,7 +140,12 @@ class Transaction:
                 if not var.get():
                     messagebox.showerror("Lỗi", "Vui lòng nhập đầy đủ thông tin", parent=add_transaction_window)
                     return
-
+            with open("data/room_info.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for item in data:
+                    if item["room_name"] == self.room_var.get():
+                        room_price = change_string_to_float(item["room_price"])
+                        
             new_data = {
                 "time": self.time_var.get(),
                 "room": self.room_var.get(),
@@ -148,7 +153,7 @@ class Transaction:
                 "number_electric": self.entry_vars[1].get(),
                 "number_water": self.entry_vars[2].get(),
                 "service_fee": str(self.service_price*int(self.entry_vars[0].get())),
-                "total_fee": str(self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.service_price*int(self.entry_vars[0].get()))),
+                "total_fee": str(int(room_price)+ self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.service_price*int(self.entry_vars[0].get()))),
                 "status": self.entry_vars[3].get()
             }
 
@@ -238,6 +243,11 @@ class Transaction:
                 if not var.get():
                     messagebox.showerror("Lỗi", "Vui lòng nhập đầy đủ thông tin", parent=edit_transaction_window)
                     return
+            with open("data/room_info.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for item in data:
+                    if item["room_name"] == self.room_var.get():
+                        room_price = change_string_to_float(item["room_price"])
             new_data = {
                 "time": self.time_var.get(),
                 "room": self.room_var.get(),
@@ -245,7 +255,7 @@ class Transaction:
                 "number_electric": self.entry_vars[1].get(),
                 "number_water": self.entry_vars[2].get(),
                 "service_fee": str(self.service_price*int(self.entry_vars[0].get())),
-                "total_fee": str(self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.service_price*int(self.entry_vars[0].get()))),
+                "total_fee": str(int(room_price)+ self.electric_price*int(self.entry_vars[1].get()) + self.water_price*int(self.entry_vars[2].get()) + int(self.service_price*int(self.entry_vars[0].get()))),
                 "status": self.entry_vars[3].get()
             }
 
@@ -308,7 +318,6 @@ class Transaction:
         data.append(new_data)
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
-
 
     def get_room_data(self):
         file_path = "data/list.json"

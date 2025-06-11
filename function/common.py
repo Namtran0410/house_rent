@@ -11,7 +11,10 @@ def change_to_float(number):
     string = change_number_to_thousand(number)
     number_str = string.replace(",", "")
     return float(number_str)
-
+def change_string_to_float(string):
+    string = string.replace(",", "")
+    return float(string)
+    
 def change_to_string(string):
     # Tách thành 2 phần của chuỗi trước dấu . 
     convert_string = string.split(".")[0]
