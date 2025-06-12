@@ -31,7 +31,17 @@
 - Doanh thu = số tiền thu được qua giao dịch - theo tháng và đã thanh toán
 - Lợi nhuận = Doanh thu - chi phí 
 - Tăng giảm so với tháng trước
+- Tính toán doanh thu bonus thêm điện tổng, nước tổng, và phí dịch vụ, ngoài ra còn phụ phí 
+    + Lấy điện tổng trừ đi điện đã dùng 
+    + Lấy nước tổng, trừ đi nước đã dùng
+    + Lấy tiền dịch vụ đã chi 
+    => Tính tổng tiền chi + tiền phòng 
+    + Doanh thu = điện * giá + nước* giá + tiền phòng + tiền dịch vụ 
+    => Lợi nhuận = doanh thu - tổng tiền chi 
 
+    Nếu lợi nhuận > giá phòng => doanh thu tăng 
+    Nếu lợi nhuận < giá phòng => doanh thu giảm 
+     
 # Tab 5: Cài đặt
 - topLevel 4
 - Title: Cài đặt 

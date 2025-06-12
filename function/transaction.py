@@ -29,7 +29,7 @@ class Transaction:
                 data = []
         self.electric_price = int(data[0]["electric_business_price"])
         self.water_price = int(data[0]["water_business_price"])
-        self.service_price = int(data[0]["service_price"])
+        self.service_price = int(data[0]["service_business_price"])
 
     def setup_button_style(self, window):
         style = ttk.Style(window)

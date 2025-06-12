@@ -1,1 +1,22 @@
-[]
+[
+    {
+        "time": "6/12/25",
+        "room": "201",
+        "number_human": "1",
+        "number_electric": "11",
+        "number_water": "1",
+        "service_fee": "250000",
+        "total_fee": "5326000",
+        "status": "Chưa thanh toán"
+    },
+    {
+        "time": "6/12/25",
+        "room": "401",
+        "number_human": "1",
+        "number_electric": "14",
+        "number_water": "1",
+        "service_fee": "250000",
+        "total_fee": "5338000",
+        "status": "Chưa thanh toán"
+    }
+]

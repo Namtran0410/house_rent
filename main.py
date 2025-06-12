@@ -22,7 +22,8 @@ class MainWindow:
         self.create_widgets()
         
         # Tạo các file data nếu chưa có 
-        list_file = ['data/list.json','data/room_info.json', 'data/setting.json', 'data/transaction.json']
+        list_file = ['data/list.json','data/room_info.json', 'data/setting.json',
+         'data/transaction.json', 'data/expensed.json']
         if not os.path.exists("data"):
             os.makedirs("data", exist_ok=True)
         for js_file in list_file:

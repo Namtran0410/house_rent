@@ -1,3 +1,4 @@
+from email import message
 import tkinter as tk
 from tkinter import ttk, messagebox
 import json
@@ -41,12 +42,13 @@ class Revenue:
         ttk.Label(btn_frame, text="🔍 Chọn năm", width=15, anchor="w").pack(side="left")
         self.choos_year_variable = tk.StringVar()
         choose_year_button = ttk.Combobox(btn_frame, textvariable= self.choos_year_variable, values= self.get_year())
+        choose_year_button.current(0)
         choose_year_button.pack(side="left")
 
         # Nút "Chi phí phát sinh"
         ttk.Button(btn_frame, text="➕ Chi phí phát sinh", command=self.add_expensed).pack(side="left", padx=20)
 
-        self.columns = ("Tháng", "Chi phí ban đầu", "Chi phí thêm", "Doanh thu", "Lợi nhuận", "Tăng giảm")
+        self.columns = ("Tháng", "Chi phí ban đầu", "Chi phí tổng", "Doanh thu", "Lợi nhuận", "Tăng giảm")
         self.tree = ttk.Treeview(self.window, columns = self.columns, show="headings", height=15, selectmode="extended")
         self.tree.pack(fill= "both", expand= True, padx=10, pady=10)
         choose_year_button.bind("<<ComboboxSelected>>", self.update_treeview_by_year)
@@ -54,7 +56,7 @@ class Revenue:
         col_widths = {
             "Tháng": 100,
             "Chi phí ban đầu": 80,
-            "Chi phí thêm": 80,
+            "Chi phí tổng": 80,
             "Doanh thu": 80,
             "Lợi nhuận": 80,
             "Tăng giảm": 100
@@ -68,42 +70,120 @@ class Revenue:
     
     #1 Chi phí thêm của tháng
     def add_expensed(self): 
+        selected = self.tree.selection()
+        if not selected: 
+            messagebox.showerror("Lỗi", "Vui lòng chọn giao dịch để sửa")
+            return
+
+        self.selected_data = self.tree.item(selected, "values")
+
         add_expensed_window = tk.Toplevel(self.window)
         add_expensed_window.title("Add chi phí phát sinh")
-        add_expensed_window.geometry("300x300")
+        add_expensed_window.geometry("300x400")
         add_expensed_window.grab_set()
 
         self.setup_button_style(add_expensed_window)
 
-        # Form tổng
         form_frame = ttk.Frame(add_expensed_window, padding=10)
         form_frame.pack(fill="both", expand=True)
 
-        # Frame chứa các label/entry + nút thêm
         self.button_add_frame = tk.Frame(form_frame)
         self.button_add_frame.pack(fill="both", expand=True, anchor="nw")
 
-        # Frame chứa nút Lưu dưới cùng
         save_btn_frame = ttk.Frame(add_expensed_window)
         save_btn_frame.pack(side="bottom", pady=10)
 
-        # Nút Lưu (tạo 1 lần duy nhất)
-        ttk.Button(save_btn_frame, text="Lưu", command=lambda: print("Lưu dữ liệu"))\
-            .pack(anchor="center")
+        ttk.Button(save_btn_frame, text="Lưu", command=self.calculate_expensed).pack(anchor="center")
 
-        # Đếm số dòng
-        self.field_count = 0
-        def add_field():
+        self.expensed_electric_var = tk.StringVar()
+        ttk.Label(self.button_add_frame, text=f"Tổng số điện")\
+            .grid(row=1, column=0, padx=5, pady=2, sticky="w")
+        ttk.Entry(self.button_add_frame, width=25, textvariable=self.expensed_electric_var)\
+            .grid(row=1, column=1, padx=5, pady=2)
+
+        self.expensed_water_var = tk.StringVar()
+        ttk.Label(self.button_add_frame, text=f"Tổng số nước")\
+            .grid(row=2, column=0, padx=5, pady=2, sticky="w")
+        ttk.Entry(self.button_add_frame, width=25, textvariable=self.expensed_water_var)\
+            .grid(row=2, column=1, padx=5, pady=2)
+
+        self.field_count = 2
+        self.field_vars = []
+
+        def add_field(value=""):
             self.field_count += 1
+            var = tk.StringVar(value=value)
             ttk.Label(self.button_add_frame, text=f"Label {self.field_count}")\
                 .grid(row=self.field_count, column=0, padx=5, pady=2, sticky="w")
-            ttk.Entry(self.button_add_frame, width=25)\
+            ttk.Entry(self.button_add_frame, width=25, textvariable=var)\
                 .grid(row=self.field_count, column=1, padx=5, pady=2)
+            self.field_vars.append(var)
 
-        # Nút thêm nhãn (ở hàng 0)
         ttk.Button(self.button_add_frame, text="➕Thêm nhãn", command=add_field)\
             .grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 5))
 
+        # Load saved data if exists
+        expensed_file = 'data/expensed.json'
+        loaded_record = None
+
+        if os.path.exists(expensed_file):
+            with open(expensed_file, "r", encoding="utf-8") as f:
+                try:
+                    loaded_data = json.load(f)
+                    for item in loaded_data:
+                        if item.get("month") == self.selected_data[0]:
+                            loaded_record = item
+                            break
+                except json.JSONDecodeError:
+                    pass
+
+        if loaded_record:
+            self.expensed_electric_var.set(loaded_record.get("total_electric", ""))
+            self.expensed_water_var.set(loaded_record.get("total_water", ""))
+
+            for i, val in enumerate(loaded_record.get("total_other_expensed", []), start=3):
+                add_field(str(val))
+
+    def calculate_expensed(self):
+        with open('data/setting.json', "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        base_price_electric = int(data[0]['electric_base_price'])
+        base_price_water = int(data[0]['water_base_price'])
+
+        if self.selected_data:
+            self.expendsed_month = self.selected_data[0]
+            self.total_price_electric = int(self.expensed_electric_var.get()) * base_price_electric
+            self.total_price_water = int(self.expensed_water_var.get()) * base_price_water
+            self.total_other_expensed = sum(int(var.get()) for var in self.field_vars if var.get().isdigit())
+            self.total_expensed = self.total_price_electric + self.total_price_water + self.total_other_expensed
+
+            other_expense_values = [int(var.get()) for var in self.field_vars if var.get().isdigit()]
+
+            data_expensed = {
+                "month": self.expendsed_month,
+                "total_electric": self.expensed_electric_var.get(),
+                "total_water": self.expensed_water_var.get(),
+                "total_other_expensed": other_expense_values,
+                "total_expensed": self.total_expensed
+            }
+
+            expensed_file = 'data/expensed.json'
+            if os.path.exists(expensed_file):
+                with open(expensed_file, "r", encoding="utf-8") as f:
+                    try:
+                        existing_data = json.load(f)
+                    except:
+                        existing_data = []
+            else:
+                existing_data = []
+
+            existing_data = [d for d in existing_data if d["month"] != self.expendsed_month]
+            existing_data.append(data_expensed)
+
+            with open(expensed_file, "w", encoding="utf-8") as f:
+                json.dump(existing_data, f, indent=4, ensure_ascii=False)
+            messagebox.showinfo("Đã lưu chi phí phát sinh")
             
     # add vào treeview
     def load_data(self):
@@ -148,7 +228,7 @@ class Revenue:
             self.tree.insert("", "end", values=(
                 month_data['month'],
                 change_number_to_thousand(month_data['expense']),
-                "Chi phí thêm",
+                self.add_expensed_content(),
                 change_number_to_thousand(month_data['revenue']),
                 change_number_to_thousand(month_data['profit']),
                 status
@@ -205,11 +285,11 @@ class Revenue:
                 month_data['profit'] = month_data['revenue'] - month_data['expense']
                 status = self.get_status(month_data['profit'], previous_profit)
                 previous_profit = month_data['profit']
-
+                fee = self.add_expensed_content()
                 self.tree.insert("", "end", values=(
                     month_data['month'],
                     change_number_to_thousand(month_data['expense']),
-                    "Chi phí thêm",
+                    fee,
                     change_number_to_thousand(month_data['revenue']),
                     change_number_to_thousand(month_data['profit']),
                     status
@@ -247,3 +327,45 @@ class Revenue:
 
         # Đảo ngược chiều sort khi click lại
         self.tree.heading(col, command=lambda: self.sort_tree_by_date(col, not reverse))
+
+    def add_expensed_content(self):
+        # Lấy month làm gốc
+        loaded_record = None
+        selected = self.tree.selection()
+        selected_data = self.tree.item(selected, "values")
+        if not selected: 
+            return 0
+        month = selected_data[0]
+
+        with open('data/expensed.json', "r", encoding='utf-8') as f:
+            data= json.load(f)
+
+        # Load thu tiền
+        with open('data/transaction.json', "r", encoding='utf-8') as f:
+            data_in = json.load(f)
+        month_value = {}
+
+        #Lấy tháng và lấy tổng chi phí 
+        for item in data_in:
+            month_in = item['time'].split("/")[0]
+            year_in = item['time'].split("/")[-1]
+            value = item["total_fee"]
+            if year_in != self.choos_year_variable.get():
+                continue
+            if month_in in month_value:
+                month_value[month_in] += int(value)
+            else: 
+                month_value[month_in] = int(value)
+                # month_value = {"6", xxxxxxxx, "7": yyyyy}
+
+        # Load ban đầu
+            first_expensed = int(selected_data[1])
+
+        for dict in data: 
+            if dict['month'] == month :
+                loaded_record = dict 
+        if loaded_record and month in month_value: 
+            fee= int(loaded_record['total_expensed']) + month_value[month] - first_expensed
+            return fee
+        else:
+            return 0
