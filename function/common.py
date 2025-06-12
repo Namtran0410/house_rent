@@ -38,6 +38,31 @@ def revenue_per_month(filePath, filter_year):
     statistical = [{k:v} for k, v in month_value.items()]
     return statistical
 
+def consume_per_month(filePath, filter_year): 
+    with open(filePath, "r", encoding= "utf-8") as f:
+        data = json.load(f)
+
+    # Lấy giá điện nước và tiền dịch vụ 
+    with open('data/setting.json', "r", encoding= "utf-8") as f:
+        business_data = json.load(f)
+    price_electrics = int(business_data[0]['electric_business_price'])
+    price_waters = int(business_data[0]['water_business_price'])
+
+    month_value = {}
+    for i in data: 
+        month = i['time'].split("/")[0]
+        year = i['time'].split("/")[-1]
+        consume_electric = int(i['number_electric'])
+        consume_water = int(i['number_water'])
+        if year != filter_year:
+            continue
+        if month in month_value:
+            month_value[month] +=consume_electric*price_electrics + consume_water*price_waters
+        else: 
+            month_value[month] = consume_electric*price_electrics + consume_water*price_waters
+    statistical = [{k:v} for k, v in month_value.items()]
+    return statistical
+
 def expense_per_month(filePath_trans, filePath_base, year):
     with open(filePath_trans, "r", encoding="utf-8") as f:
         data_cal = json.load(f)

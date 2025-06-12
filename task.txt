@@ -1,7 +1,1 @@
-Revenue
-2.Chi phí thêm ở doanh thu cần được chuyển sang thành tổng số điện nước ban đầu và chi phí Thêm
-nên sẽ gọi nó là "Chi phí tổng" 
-
-a. Thay đổi giao diện thành chi phí tổng
-b. Thêm hai hàng đầu là số điện và số nước tổng cả nhà, có laybel, entry, đơn vị
-c. Bên dưới sẽ là các entry khác có label và entry và đơn vị là VNĐ 
+Thay đổi lại cái lợi nhuận, doanh thu

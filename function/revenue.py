@@ -5,11 +5,7 @@ import json
 import os
 import datetime
 from datetime import datetime
-from turtle import color, window_width
-from tkcalendar import DateEntry
-from collections import defaultdict
 
-from function import transaction
 from .common import *
 field_count = 0
 class Revenue:
@@ -48,15 +44,15 @@ class Revenue:
         # Nút "Chi phí phát sinh"
         ttk.Button(btn_frame, text="➕ Chi phí phát sinh", command=self.add_expensed).pack(side="left", padx=20)
 
-        self.columns = ("Tháng", "Chi phí ban đầu", "Chi phí tổng", "Doanh thu", "Lợi nhuận", "Tăng giảm")
+        self.columns = ("Tháng", "Chi phí tổng", "Chi phí thu về", "Doanh thu", "Lợi nhuận", "Tăng giảm")
         self.tree = ttk.Treeview(self.window, columns = self.columns, show="headings", height=15, selectmode="extended")
         self.tree.pack(fill= "both", expand= True, padx=10, pady=10)
         choose_year_button.bind("<<ComboboxSelected>>", self.update_treeview_by_year)
 
         col_widths = {
             "Tháng": 100,
-            "Chi phí ban đầu": 80,
             "Chi phí tổng": 80,
+            "Chi phí thu về": 80,
             "Doanh thu": 80,
             "Lợi nhuận": 80,
             "Tăng giảm": 100
@@ -193,14 +189,11 @@ class Revenue:
             return  # Không có năm được chọn thì thoát luôn
         #1: lấy data từ transaction và lọc theo tháng - tháng và doanh thu
         revenue_per_months = revenue_per_month("data/transaction.json", year)  #[{'6': 945000}, {'7': 295000}]
-
-        #2 lấy chi phí ban đầu : số điện ban đầu, số nước ban đầu
-        usage_per_months = expense_per_month("data/transaction.json", "data/setting.json", year) # [{'6': 130000}, {'7': 30000}]
+        consumption_per_months = consume_per_month("data/transaction.json",year)
 
         #3: lấy data cho treeview
         revenue_month_format= [{'month': int(k), 'revenue': v} for d in revenue_per_months for k, v in d.items()]
-        usage_per_months_format= [{'month': int(k), 'expense': v} for d in usage_per_months for k, v in d.items()]
-
+        consumtion_month_format = [{'month': int(k), 'consume': v} for d in consumption_per_months for k, v in d.items()]
         #4: merge 2 list  
         previous_profit = 0    
         merged_data = []
@@ -212,23 +205,24 @@ class Revenue:
                     break
                 else:
                     month_data['revenue'] = 0 
-            for data in usage_per_months_format:
-                if data['month'] == i:
-                    month_data['expense'] = data['expense']
-                    break
-                else: 
-                    month_data['expense'] = 0 
-            merged_data.append(month_data)
-            month_data['profit'] = month_data['revenue'] - month_data['expense']
 
-            month_data['profit'] = month_data['revenue'] - month_data['expense']
+            for data in consumtion_month_format:
+                if data["month"] == i:
+                    month_data['consume'] = data['consume']
+                    break
+                else:
+                    month_data['consume'] = 0
+
+            merged_data.append(month_data)
+
+            month_data['profit'] = month_data['revenue'] - self.add_expensed_content(str(i))
             status = self.get_status(month_data['profit'], previous_profit)
             previous_profit = month_data['profit']
 
             self.tree.insert("", "end", values=(
                 month_data['month'],
-                change_number_to_thousand(month_data['expense']),
-                self.add_expensed_content(),
+                change_number_to_thousand(self.add_expensed_content(str(i))),
+                change_number_to_thousand(month_data['consume']),
                 change_number_to_thousand(month_data['revenue']),
                 change_number_to_thousand(month_data['profit']),
                 status
@@ -257,10 +251,10 @@ class Revenue:
             self.tree.delete(item)
         if year: 
             revenue_per_months = revenue_per_month("data/transaction.json", year)
-            usage_per_months = expense_per_month("data/transaction.json", "data/setting.json", year)
+            consumption_per_months = consume_per_month("data/transaction.json",year)
 
             revenue_month_format = [{'month': int(k), 'revenue': v} for d in revenue_per_months for k, v in d.items()]
-            usage_per_months_format = [{'month': int(k), 'expense': v} for d in usage_per_months for k, v in d.items()]
+            consumtion_month_format = [{'month': int(k), 'consume': v} for d in consumption_per_months for k, v in d.items()]
 
             #4: merge 2 list    
             merged_data = []
@@ -273,23 +267,23 @@ class Revenue:
                         break
                     else:
                         month_data['revenue'] = 0 
-                for data in usage_per_months_format:
-                    if data['month'] == i:
-                        month_data['expense'] = data['expense']
+                for data in consumtion_month_format:
+                    if data["month"] == i:
+                        month_data['consume'] = data['consume']
                         break
-                    else: 
-                        month_data['expense'] = 0 
+                    else:
+                        month_data['consume'] = 0
                 merged_data.append(month_data)
-                month_data['profit'] = month_data['revenue'] - month_data['expense']
 
                 month_data['profit'] = month_data['revenue'] - month_data['expense']
                 status = self.get_status(month_data['profit'], previous_profit)
                 previous_profit = month_data['profit']
-                fee = self.add_expensed_content()
+                fee = self.add_expensed_content(str(i))
                 self.tree.insert("", "end", values=(
                     month_data['month'],
                     change_number_to_thousand(month_data['expense']),
                     fee,
+                    change_number_to_thousand(month_data['consume']),
                     change_number_to_thousand(month_data['revenue']),
                     change_number_to_thousand(month_data['profit']),
                     status
@@ -328,44 +322,39 @@ class Revenue:
         # Đảo ngược chiều sort khi click lại
         self.tree.heading(col, command=lambda: self.sort_tree_by_date(col, not reverse))
 
-    def add_expensed_content(self):
-        # Lấy month làm gốc
+    def add_expensed_content(self, month):
         loaded_record = None
-        selected = self.tree.selection()
-        selected_data = self.tree.item(selected, "values")
-        if not selected: 
-            return 0
-        month = selected_data[0]
-
-        with open('data/expensed.json', "r", encoding='utf-8') as f:
-            data= json.load(f)
-
-        # Load thu tiền
-        with open('data/transaction.json', "r", encoding='utf-8') as f:
-            data_in = json.load(f)
+        fee = 0
         month_value = {}
 
-        #Lấy tháng và lấy tổng chi phí 
+        # Load dữ liệu chi phí phát sinh
+        with open('data/expensed.json', "r", encoding='utf-8') as f:
+            data = json.load(f)
+
+        # Load dữ liệu giao dịch
+        with open('data/transaction.json', "r", encoding='utf-8') as f:
+            data_in = json.load(f)
+
+        # Tính tổng fee theo tháng
         for item in data_in:
-            month_in = item['time'].split("/")[0]
-            year_in = item['time'].split("/")[-1]
-            value = item["total_fee"]
+            parts = item['time'].split("/")
+            if len(parts) != 3:
+                continue
+            month_in = parts[0]
+            year_in = parts[2]
             if year_in != self.choos_year_variable.get():
                 continue
-            if month_in in month_value:
-                month_value[month_in] += int(value)
-            else: 
-                month_value[month_in] = int(value)
-                # month_value = {"6", xxxxxxxx, "7": yyyyy}
 
-        # Load ban đầu
-            first_expensed = int(selected_data[1])
+            month_value[month_in] = month_value.get(month_in, 0)
 
-        for dict in data: 
-            if dict['month'] == month :
-                loaded_record = dict 
-        if loaded_record and month in month_value: 
-            fee= int(loaded_record['total_expensed']) + month_value[month] - first_expensed
-            return fee
-        else:
-            return 0
+
+        # Tìm chi phí đã lưu
+        for record in data:
+            if record['month'] == month:
+                loaded_record = record
+                break
+
+        if loaded_record and month in month_value:
+            fee = int(loaded_record['total_expensed']) + month_value[month]
+
+        return fee
